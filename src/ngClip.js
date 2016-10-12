@@ -7,7 +7,7 @@
   angular.module('ngClipboard', []).
     provider('ngClip', function() {
       var self = this;
-      this.path = '//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.1.6/ZeroClipboard.swf';
+      this.path = '//cdnjs.cloudflare.com/ajax/libs/zeroclipboard/2.2.0/ZeroClipboard.swf';
       return {
         setPath: function(newPath) {
           self.path = newPath;
@@ -28,7 +28,7 @@
         swfPath: ngClip.path,
         trustedDomains: ["*"],
         allowScriptAccess: "always",
-        forceHandCursor: true,
+        forceHandCursor: true
       };
       ZeroClipboard.config(angular.extend(config,ngClip.config || {}));
     }]).
@@ -65,7 +65,7 @@
           var client = new ZeroClipboard(element);
           if (attrs.clipCopy === "") {
             scope.clipCopy = function(scope) {
-              return element[0].previousElementSibling.innerText;
+              return element[0].previousElementSibling.innerText || element[0].previousElementSibling.textContent;
             };
           }
           client.on( 'ready', function(readyEvent) {
@@ -75,9 +75,13 @@
               clipboard.setData(attrs.clipCopyMimeType || 'text/plain', scope.$eval(scope.clipCopy));
             });
 
-            client.on( 'aftercopy', function(event) {
+            client.on( 'aftercopy', function($event) {
               if (angular.isDefined(attrs.clipClick)) {
-                scope.$apply(scope.clipClick);
+                scope.$apply(function() {
+                  return scope.clipClick({
+                    $event: $event
+                  });
+                 });
               }
               element.blur();
             });
